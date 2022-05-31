@@ -8,11 +8,7 @@ public class App {
 
         try {
             DatalogProgram dp = new DatalogProgram("input.txt");
-            System.out.println("\nIDB: \n" + dp.getIDBasText());
-            System.out.println("\nEDB: \n" + dp.getEDBasText());
-
-            System.out.println("\nIDB Rules:");
-            dp.getIDB().getRules().forEach(r -> System.out.println(r.getAsText()));
+            dp.output();
 
         } catch (FileNotFoundException | InvalidInputFileException e) {
             throw new RuntimeException(e);
