@@ -1,19 +1,10 @@
 % EDB
-
-Person(pID, name,se2x,married).
-
-Person( pID , sasc , sad , ).
-Person( pID , sasc ).
-Person( pID , dssd ).
-
-person( one ).
-person().
-
-
+person( 1, 'John', 'M', false ).
+person(2, 'Jutta', 'F', false).
+person( 3 , 'Natalie' , 'F' , true ).
 
 % IDB
-
-Man(X) :- Person(id,X,'M',m). %comment
-Singleman(Y, Fsd, X) :- Man(x), not Husband(x). % comment
-Married(   DS, Sdc) :- Person(id,x,s,1).
-Husband(X) :- Man(X),Married(x).
+man(X) :- person(id,X,'M',m).
+single_man(X) :- man(X), not husband(X).
+married(X) :- person(id,X,s,1).
+husband(X) :- man(X) , married(X).

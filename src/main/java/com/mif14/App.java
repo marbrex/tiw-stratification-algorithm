@@ -8,7 +8,7 @@ public class App {
 
         try {
             DatalogProgram dp = new DatalogProgram("input.txt");
-            dp.test();
+//            dp.test();
 
         } catch (FileNotFoundException | InvalidInputFileException e) {
             throw new RuntimeException(e);

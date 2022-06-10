@@ -15,7 +15,7 @@ public class DatalogProgram {
     private final String filePath;
     private String content;
     private final Pattern COMMENT = Pattern.compile("%.*", Pattern.MULTILINE);
-    private final Pattern EDB = Pattern.compile("^(\\w*)\\(\\s*(((?:(?:[a-z]\\w*)+\\s*)|(?:'[\\w\\s]+'\\s*))(?:,\\s*((?:(?:[a-z]\\w*)+\\s*)|(?:'[\\w\\s]+'\\s*)))*)\\s*\\)\\.", Pattern.MULTILINE);
+    private final Pattern EDB = Pattern.compile("^(\\w*)\\(\\s*(((?:(?:(?:[a-z]\\w*)|(?:\\d+))\\s*)|(?:'[\\w\\s]+'\\s*))(?:,\\s*((?:(?:(?:[a-z]\\w*)|(?:\\d+))+\\s*)|(?:'[\\w\\s]+'\\s*)))*)\\s*\\)\\.", Pattern.MULTILINE);
     private final Pattern IDB = Pattern.compile("^(\\w*)\\(\\s*((?:(?:[A-Z]\\w*)+\\s*)(?:,\\s*(?:(?:[A-Z]\\w*)+\\s*))*)\\s*\\)\\s*:-\\s*(not\\s+|)?(\\w*)\\(\\s*((?:(?:\\w+\\s*)|(?:'[\\w\\s]+'\\s*))(?:,\\s*(?:(?:\\w+\\s*)|(?:'[\\w\\s]+'\\s*)))*)\\s*\\)(?:,\\s*(?:(not\\s+|)?(\\w*)\\(\\s*((?:(?:(?:[a-zA-Z]\\w*)+\\s*)|(?:'[\\w\\s]+'\\s*))(?:,\\s*(?:(?:(?:[a-zA-Z]\\w*)+\\s*)|(?:'[\\w\\s]+'\\s*)))*)\\s*\\)))*\\s*\\.", Pattern.MULTILINE);
     private final List<Fact> facts = new ArrayList<>();
     private final List<Rule> rules = new ArrayList<>();
