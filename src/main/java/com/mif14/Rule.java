@@ -2,71 +2,34 @@ package com.mif14;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 public class Rule {
 
-    public final static String RULE_DELIMITER = ":-";
-    public final static String BODY_DELIMITER = ",";
+    public String text;
+    private final String name;
+    private final List<String> params = new ArrayList<>();
+    private final List<Predicate> predicates = new ArrayList<>();
 
-    private final String rule;
-    private String headText;
-    private String bodyText;
-    private Tuple head;
-    private final List<Tuple> body = new ArrayList<>();
-
-    public Rule(String rule) throws InvalidInputFileException {
-        if (rule != null && !"".equals(rule)) {
-            this.rule = rule;
-            this.parseRule();
-        }
-        else throw new InvalidInputFileException();
+    public Rule(String name, List<String> params) {
+        this.name = name;
+        this.params.addAll(params);
     }
 
-    public String getAsText() {
-        return rule;
+    public Rule(String name, List<String> params, List<Predicate> predicates) {
+        this.name = name;
+        this.params.addAll(params);
+        this.predicates.addAll(predicates);
     }
 
-    public Tuple getHead() {
-        return head;
+    public void setPredicate(int i, Predicate pred) {
+        this.predicates.set(i, pred);
     }
 
-    public List<Tuple> getBody() {
-        return body;
+    public Predicate getPredicate(int i) {
+        return predicates.get(i);
     }
 
-    private void parseRule() throws InvalidInputFileException {
-        Scanner scanner = new Scanner(rule);
-        scanner.useDelimiter(RULE_DELIMITER);
-
-        this.headText = scanner.hasNext() ? scanner.next().trim() : "";
-        this.bodyText = scanner.hasNext() ? scanner.next().trim() : "";
-
-        if ("".equals(headText) && "".equals(bodyText)) {
-            throw new InvalidInputFileException();
-        }
-        else {
-            this.head = new Tuple(headText);
-            this.parseBody();
-        }
+    public void addPredicate(Predicate pred) {
+        this.predicates.add(pred);
     }
-
-    private void parseBody() throws InvalidInputFileException {
-        Scanner scanner = new Scanner(bodyText);
-        scanner.useDelimiter(BODY_DELIMITER);
-
-        while (scanner.hasNext()) {
-
-            String tupleText = scanner.next().trim();
-
-            if ("".equals(tupleText)) {
-                throw new InvalidInputFileException();
-            }
-            else {
-                Tuple tuple = new Tuple(tupleText);
-                body.add(tuple);
-            }
-        }
-    }
-
 }
