@@ -2,23 +2,22 @@ package com.mif14;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class DatalogProgram {
 
-    private final String filePath;
     private String content;
+    private final String filePath;
     private final Pattern COMMENT = Pattern.compile("%.*", Pattern.MULTILINE);
     private final Pattern EDB = Pattern.compile("^(\\w*)\\(\\s*(((?:(?:(?:[a-z]\\w*)|(?:\\d+))\\s*)|(?:'[\\w\\s]+'\\s*))(?:,\\s*((?:(?:(?:[a-z]\\w*)|(?:\\d+))+\\s*)|(?:'[\\w\\s]+'\\s*)))*)\\s*\\)\\.", Pattern.MULTILINE);
-    private final Pattern IDB = Pattern.compile("^(\\w*)\\(\\s*((?:(?:[A-Z]\\w*)+\\s*)(?:,\\s*(?:(?:[A-Z]\\w*)+\\s*))*)\\s*\\)\\s*:-\\s*(not\\s+|)?(\\w*)\\(\\s*((?:(?:\\w+\\s*)|(?:'[\\w\\s]+'\\s*))(?:,\\s*(?:(?:\\w+\\s*)|(?:'[\\w\\s]+'\\s*)))*)\\s*\\)(?:,\\s*(?:(not\\s+|)?(\\w*)\\(\\s*((?:(?:(?:[a-zA-Z]\\w*)+\\s*)|(?:'[\\w\\s]+'\\s*))(?:,\\s*(?:(?:(?:[a-zA-Z]\\w*)+\\s*)|(?:'[\\w\\s]+'\\s*)))*)\\s*\\)))*\\s*\\.", Pattern.MULTILINE);
+    private final Pattern IDB = Pattern.compile("^(\\w*)\\(\\s*((?:(?:[A-Z]\\w*)+\\s*)(?:,\\s*(?:(?:[A-Z]\\w*)+\\s*))*)\\s*\\)\\s*:-\\s*(not\\s+|)?(\\w*)\\(\\s*((?:(?:\\w+\\s*)|(?:'[\\w\\s]+'\\s*))(?:,\\s*(?:(?:\\w+\\s*)|(?:'[\\w\\s]+'\\s*)))*)\\s*\\)\\s*(?:,\\s*(?:(not\\s+|)?(\\w*)\\(\\s*((?:(?:(?:[a-zA-Z]\\w*)+\\s*)|(?:'[\\w\\s]+'\\s*))(?:,\\s*(?:(?:(?:[a-zA-Z]\\w*)+\\s*)|(?:'[\\w\\s]+'\\s*)))*)\\s*\\)))*\\s*\\.", Pattern.MULTILINE);
     private final List<Fact> facts = new ArrayList<>();
     private final List<Rule> rules = new ArrayList<>();
+    private final Map<Predicate, Integer> stratum = new HashMap<>();
 
     public DatalogProgram(String filePath) throws FileNotFoundException, InvalidInputFileException {
         if (filePath != null && !"".equals(filePath)) {
@@ -32,40 +31,43 @@ public class DatalogProgram {
         try {
             Scanner scanner = new Scanner(new File(filePath));
             scanner.useDelimiter("\\A");
-            String all = scanner.next();
+            content = scanner.next();
 
-            final Matcher matcherEDB = EDB.matcher(all);
+            final Matcher matcherEDB = EDB.matcher(content);
             while (matcherEDB.find()) {
-                System.out.println("Full match: " + matcherEDB.group(0));
+                // System.out.println("Full match: " + matcherEDB.group(0));
 
-                for (int i = 1; i <= matcherEDB.groupCount(); i++) {
-                    System.out.println("Group " + i + ": " + matcherEDB.group(i));
-                }
+                // for (int i = 1; i <= matcherEDB.groupCount(); i++) {
+                //     System.out.println("Group " + i + ": " + matcherEDB.group(i));
+                // }
 
                 String name = matcherEDB.group(1);
                 String[] params = matcherEDB.group(2).split(",");
                 List<String> paramsList = Arrays.stream(params).map(String::trim).collect(Collectors.toList());
-                paramsList.forEach(System.out::println);
+                // paramsList.forEach(System.out::println);
 
                 Fact f = new Fact(name, paramsList);
                 f.text = matcherEDB.group(0);
                 facts.add(f);
             }
 
-            final Matcher matcherCOMMENT = COMMENT.matcher(all);
-            while (matcherCOMMENT.find()) {
-                System.out.println("Full match: " + matcherCOMMENT.group(0));
-            }
+            // final Matcher matcherCOMMENT = COMMENT.matcher(content);
+            // while (matcherCOMMENT.find()) {
+            //     System.out.println("Full match: " + matcherCOMMENT.group(0));
+            // }
 
-            final Matcher matcherIDB = IDB.matcher(all);
+            final Matcher matcherIDB = IDB.matcher(content);
             while (matcherIDB.find()) {
-                System.out.println("Full match: " + matcherIDB.group(0));
+                // System.out.println("Full match: " + matcherIDB.group(0));
 
                 String name = matcherIDB.group(1);
                 String[] params = matcherIDB.group(2).split(",");
-                List<String> paramsList = Arrays.stream(params).map(String::trim).collect(Collectors.toList());
+                List<Predicate.Parameter> paramsList = Arrays.stream(params).map(p -> {
+                    return new Predicate.MutableParameter(p.trim());
+                }).collect(Collectors.toList());
 
-                Rule r = new Rule(name, paramsList);
+                Predicate ruleHead = new Predicate(name,paramsList,false,true);
+                Rule r = new Rule(ruleHead);
                 r.text = matcherIDB.group(0);
 
                 boolean isNegated = false;
@@ -73,7 +75,7 @@ public class DatalogProgram {
                 List<Predicate.Parameter> predParams;
                 String current;
                 for (int i = 3; i <= matcherIDB.groupCount(); i++) {
-                    System.out.println("Group " + i + ": " + matcherIDB.group(i));
+                    // System.out.println("Group " + i + ": " + matcherIDB.group(i));
 
                     if (matcherIDB.group(i) == null) break;
 
@@ -118,16 +120,63 @@ public class DatalogProgram {
 
     public void stratify() {
 
+        rules.forEach(rule -> {
+            stratum.put(rule.getHead(), 1);
+            rule.getBody().forEach(p -> stratum.put(p, 1));
+        });
+
+        AtomicBoolean stratumChanged = new AtomicBoolean(false);
+        AtomicBoolean stratumExceeds = new AtomicBoolean(false);
+        do {
+            stratumChanged.set(false);
+            stratumExceeds.set(false);
+            rules.forEach(r -> {
+                Predicate p = r.getHead();
+                r.getBody().forEach(q -> {
+                    Integer strataQ = stratum.get(q);
+                    Integer value = q.isNegated() ? ++strataQ : strataQ;
+                    if (value > stratum.get(p)) {
+                        stratumChanged.set(true);
+                        if (value <= rules.size()) stratum.put(p, value);
+                        else stratumExceeds.set(true);
+                    }
+                });
+            });
+        } while(stratumChanged.get() && !stratumExceeds.get());
+
+        // rules.forEach(r -> System.out.println(r.getHead().getName() + " : " + stratum.get(r.getHead())));
     }
 
-    public void test() {
-        // some tests
-        System.out.println(rules.get(1).getPredicate(1).isNegated());
-        System.out.println(rules.get(0).getPredicate(0).getParam(2).getLabel());
-        System.out.println(rules.get(0).getPredicate(0).getParam(2).getValue());
-        System.out.println(rules.get(0).getPredicate(0).getParam(2).isVariable());
-        System.out.println(rules.get(0).getPredicate(0).getParam(1).isVariable());
-        System.out.println(rules.get(2).getPredicate(0).getParam(1).isVariable());
+    public void output() {
+
+        SortedMap<Integer, List<Rule>> partitions = new TreeMap<>();
+
+        stratum.forEach(((predicate, strata) -> {
+            if (predicate.isRuleHead()) {
+                Rule rule = null;
+                for (Rule r : rules) {
+                    if (r.getHead().equals(predicate)) {
+                        rule = r;
+                        break;
+                    }
+                }
+                List<Rule> part = partitions.get(strata);
+                if (part == null) part = new ArrayList<>();
+                part.add(rule);
+                partitions.put(strata, part);
+            }
+        }));
+
+        StringBuilder builder = new StringBuilder();
+        partitions.forEach((strata, part) -> {
+            builder.append("P").append(strata).append(" = {\n");
+            part.forEach(rule -> {
+                builder.append("\t").append(rule.text).append("\n");
+            });
+            builder.append("}\n");
+        });
+
+        System.out.println(builder.toString());
     }
 
 }

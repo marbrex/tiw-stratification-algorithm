@@ -4,7 +4,7 @@ person(2, 'Jutta', 'F', false).
 person( 3 , 'Natalie' , 'F' , true ).
 
 % IDB
-man(X) :- person(id,X,'M',m).
+man(X) :- person(id, X, 'M', m).
 single_man(X) :- man(X), not husband(X).
-married(X) :- person(id,X,s,1).
+married(X) :- person(id, X, s, true).
 husband(X) :- man(X) , married(X).

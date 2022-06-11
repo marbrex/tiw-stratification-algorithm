@@ -8,16 +8,30 @@ public class Predicate {
     private final String name;
     private final List<Parameter> params = new ArrayList<>();
     private final boolean isNegated;
+    private final boolean isRuleHead;
 
     public Predicate(String name, boolean isNegated) {
         this.name = name;
         this.isNegated = isNegated;
+        this.isRuleHead = false;
     }
 
     public Predicate(String name, List<Parameter> params, boolean isNegated) {
         this.name = name;
         this.params.addAll(params);
         this.isNegated = isNegated;
+        this.isRuleHead = false;
+    }
+
+    public Predicate(String name, List<Parameter> params, boolean isNegated, boolean isRuleHead) {
+        this.name = name;
+        this.params.addAll(params);
+        this.isNegated = isNegated;
+        this.isRuleHead = isRuleHead;
+    }
+
+    public boolean isRuleHead() {
+        return isRuleHead;
     }
 
     public String getName() {

@@ -8,7 +8,8 @@ public class App {
 
         try {
             DatalogProgram dp = new DatalogProgram("input.txt");
-//            dp.test();
+            dp.stratify();
+            dp.output();
 
         } catch (FileNotFoundException | InvalidInputFileException e) {
             throw new RuntimeException(e);
