@@ -1,7 +1,6 @@
 package com.mif14;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
@@ -176,7 +175,16 @@ public class DatalogProgram {
             builder.append("}\n");
         });
 
-        System.out.println(builder.toString());
+        System.out.println(builder);
+
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter("./output.txt"));
+            writer.write(builder.toString());
+            writer.close();
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

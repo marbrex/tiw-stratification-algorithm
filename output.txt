@@ -1,0 +1,8 @@
+P1 = {
+	married(X) :- person(id, X, s, true).
+	husband(X) :- man(X) , married(X).
+	man(X) :- person(id, X, 'M', m).
+}
+P2 = {
+	single_man(X) :- man(X), not husband(X).
+}
